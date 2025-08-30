@@ -14,6 +14,7 @@ func handleMarker(ctx context.Context, fd int) (ok bool) {
 	marked := config.Markers.Check(fd)
 	if !marked {
 		log.Error().Msg("Socket mark check failed")
+		return
 	}
 	log.Info().Msg("Socket marked")
 
