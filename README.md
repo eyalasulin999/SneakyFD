@@ -58,7 +58,6 @@ client.markers = [TCPOptionsMarker(mss=1337)]
 
 ## TODO
 
-- fix wait process to wait until socket timed out
 - real payloads (currently `EchoServer` for testing)
 - support tcp6 (mapped addresses as well)
 - encryption

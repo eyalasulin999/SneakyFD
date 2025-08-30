@@ -44,7 +44,7 @@ func Handle(sock types.Socket) {
 	log.Info().Msg("Beacon sent - HELLO")
 
 	// Kill process OR wait
-	ok = handleProcess(ctx, sockProc.PID)
+	ok = handleProcess(ctx, sockProc)
 	if !ok {
 		return
 	}
