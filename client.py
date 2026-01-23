@@ -3,6 +3,8 @@ from IPython.terminal.embed import InteractiveShellEmbed
 import socket
 import random
 from enum import Enum
+from protobuf.messages import messages_pb2
+import struct
 
 
 class BeaconType(Enum):
@@ -52,17 +54,17 @@ class Client:
 
     def connect(self):
         self.__sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        src_port = self.__random_src_port()
+        src_port = self._random_src_port()
         self.__sock.bind(('', src_port))
 
-        self.__mark_socket()
+        self._mark_socket()
 
         print(
             f"Connecting to {self.host}:{self.dst_port} using source port {src_port}")
         self.__sock.connect((self.host, self.dst_port))
         print("Socket established")
 
-        self.__wait_beacons()
+        self._wait_beacons()
 
     def shell(self):
         while True:
@@ -73,11 +75,14 @@ class Client:
 
             response = self.__sock.recv(1024)
             print("Received:", response.decode())
+    
+    def get_sock(self):
+        return self.__sock
 
     def disconnect(self):
         self.__sock.close()
 
-    def __wait_beacons(self):
+    def _wait_beacons(self):
         print("Waiting for beacons")
         recv_buffer = bytearray()
         while True:
@@ -86,7 +91,7 @@ class Client:
                 break
 
             recv_buffer.extend(data)
-            real_data, beacons = self.__parse_beacons(recv_buffer)
+            real_data, beacons = self._parse_beacons(recv_buffer)
 
             if real_data:
                 print(f"Received data: {real_data}")
@@ -99,7 +104,7 @@ class Client:
                 if BeaconType.READY.value == b:
                     return
 
-    def __parse_beacons(self, stream_data):
+    def _parse_beacons(self, stream_data):
         beacons = []
         real_data = bytearray()
         i = 0
@@ -124,11 +129,11 @@ class Client:
         del stream_data[:i]
         return bytes(real_data), beacons
 
-    def __mark_socket(self):
+    def _mark_socket(self):
         for m in self.markers:
             m.Set(self.__sock)
 
-    def __random_src_port(self):
+    def _random_src_port(self):
         total_ports = 0
         expanded = []
         for p in self.src_ports:
@@ -162,7 +167,40 @@ class Client:
     @staticmethod
     def _format_list(lst):
         return ", ".join(map(str, lst)) if lst else "<empty>"
+    
+    def _recv_exact(self, n):
+        buf = b""
+        while len(buf) < n:
+            chunk = self.__sock.recv(n - len(buf))
+            if not chunk:
+                raise ConnectionError("Socket closed")
+            buf += chunk
+        return buf
 
+    def _recv_envelope(self):
+        # 1. Read 4-byte little endian length
+        hdr = self._recv_exact(4)
+        (msg_len,) = struct.unpack("<I", hdr)
+
+        # 2. Read the envelope of msg_len bytes
+        data = self._recv_exact(msg_len)
+
+        # 3. Parse Envelope
+        env = messages_pb2.Envelope()
+        env.ParseFromString(data)
+
+        return env
+
+    def _send_msg(self, msg, type):
+        envelope = messages_pb2.Envelope(type=type, data=msg.SerializeToString()).SerializeToString()
+        header = struct.pack("<I", len(envelope))
+        self.__sock.sendall(header + envelope)
+
+    def ping(self, payload="AviBitter"):
+        req = messages_pb2.PingReq(payload=payload)
+        self._send_msg(req, 0)
+        envlope = self._recv_envelope()
+        print(envlope)
 
 def start_shell():
     random.seed()
@@ -179,3 +217,11 @@ def start_shell():
 
 if __name__ == "__main__":
     start_shell()
+
+"""
+client.host = "127.0.0.1"
+client.dst_port = 22
+client.src_ports = [(1337, 2337)]
+client.markers = [TCPOptionsMarker(mss=1337)]
+client.connect()
+"""

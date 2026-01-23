@@ -64,6 +64,7 @@ client.markers = [TCPOptionsMarker(mss=1337)]
 - sessions managment
 - communication covers
 - make the code cleaner & error handling well
+- constants by protobuf
 - ...
 - ..
 - .

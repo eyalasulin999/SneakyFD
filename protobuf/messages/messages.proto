@@ -1,0 +1,17 @@
+// protoc -I=. --go_out=. --go_opt=paths=source_relative --python_out=. ./protobuf/messages/messages.proto
+syntax = "proto3";
+package messages;
+option go_package = "sneakyfd/protobuf/messages";
+
+message Envelope {
+    uint32 type = 1;
+    bytes data = 3;
+}
+
+message PingReq {
+    string payload = 1;
+}
+
+message PingRes {
+    string payload = 1;
+}

