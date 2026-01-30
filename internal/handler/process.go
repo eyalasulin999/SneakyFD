@@ -6,11 +6,12 @@ import (
 	"sneakyfd/config"
 	"sneakyfd/internal/beacon"
 	"sneakyfd/internal/process"
+	"sneakyfd/internal/types"
 
 	"github.com/rs/zerolog"
 )
 
-func handleProcess(ctx context.Context, pid int) (ok bool) {
+func handleProcess(ctx context.Context, sockProc types.SocketProc) (ok bool) {
 	log := zerolog.Ctx(ctx)
 	beaconSender := beacon.Ctx(ctx)
 
@@ -18,7 +19,7 @@ func handleProcess(ctx context.Context, pid int) (ok bool) {
 	log.Info().Msg("Beacon sent - HANDLE PROCESS")
 
 	if config.KillProcess {
-		killed := process.KillProcess(pid)
+		killed := process.KillProcess(sockProc.PID)
 		if !killed {
 			log.Error().Msg("Kill process failed, fallback wait process")
 			beaconSender.Send(beacon.KILL_PROCESS_FAILED_BEACON)
@@ -34,7 +35,7 @@ func handleProcess(ctx context.Context, pid int) (ok bool) {
 	log.Info().Msg("Wait process")
 	beaconSender.Send(beacon.WAIT_PROCESS_BEACON)
 	log.Info().Msg("Beacon sent - WAIT PROCESS")
-	w := process.WaitProcess(pid, config.WaitProcessTimeout)
+	w := process.WaitProcess(sockProc.PID, sockProc.FD, config.WaitProcessTimeout)
 	if w {
 		log.Info().Msg("Wait process done")
 		beaconSender.Send(beacon.WAIT_PROCESS_DONE_BEACON)
