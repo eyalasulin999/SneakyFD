@@ -1,10 +1,10 @@
 package hijack
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strconv"
-	"errors"
 
 	"sneakyfd/internal/types"
 )

@@ -1,13 +1,13 @@
 package procnet
 
 import (
+	"bufio"
+	"encoding/binary"
+	"fmt"
+	"io"
 	"net"
 	"strconv"
-	"encoding/binary"
-	"io"
-	"bufio"
 	"strings"
-	"fmt"
 
 	"sneakyfd/internal/types"
 )
@@ -44,7 +44,6 @@ func parseAddr(s string) (*types.SocketAddr, error) {
 	}
 	return &types.SocketAddr{IP: ip, Port: uint16(v)}, nil
 }
-
 
 func parseSocktab(r io.Reader, accept Filter) (types.Sockets, error) {
 	br := bufio.NewScanner(r)
@@ -84,7 +83,7 @@ func parseSocktab(r io.Reader, accept Filter) (types.Sockets, error) {
 			return nil, err
 		}
 		e.UID = uint32(u)
-		e.Inode =  types.SocketInode(fields[9])
+		e.Inode = types.SocketInode(fields[9])
 		if accept(&e) {
 			tab = append(tab, e)
 		}
